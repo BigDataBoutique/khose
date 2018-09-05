@@ -1,0 +1,22 @@
+hoses:
+  default:
+    source:
+      kinesis:
+        endpoint: kinesis.us-west-2.amazonaws.com
+        region: us-west-2
+        stream_name: production-events
+        initial_position: latest
+        #aws_profile:
+        #aws_secret:
+        #aws_access_key_id:
+        #aws_secret_access_key:
+    sink:
+      console:
+        enabled: true
+      s3:
+        bucket: s3a://my-parquet-bucket/
+        prefix: events-stream-test/
+        format: parquet
+        compression: gzip
+        schema_file: events.parquet.schema
+        #batching_strategy: size, time, ...

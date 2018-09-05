@@ -1,0 +1,60 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'java'
+    id 'idea'
+    id 'application'
+}
+
+// Define the main class for the application
+mainClassName = 'com.bigdataboutique.khose.App'
+tasks.distZip.enabled = false
+tasks.distTar.enabled = false
+
+jar {
+    manifest {
+        attributes 'Description': 'Data hose from Kinesis to Parquet on S3'
+    }
+}
+
+ext {
+    log4j2version = '2.9.0'
+    parquetVersion = '1.10.0'
+    hadoopVersion = '3.1.1'
+}
+
+shadowJar {
+    baseName = 'shadow'
+    classifier = null
+    version = null
+    zip64 = true
+}
+
+dependencies {
+    compile "org.apache.parquet:parquet-common:$parquetVersion"
+    compile "org.apache.parquet:parquet-column:$parquetVersion"
+    //compile 'org.apache.parquet:parquet-schema:1.10.0'
+    compile "org.apache.parquet:parquet-hadoop:$parquetVersion"
+
+    compile group: 'org.apache.hadoop', name: 'hadoop-common', version: hadoopVersion
+    compile group: 'org.apache.hadoop', name: 'hadoop-aws', version: hadoopVersion
+
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4j2version
+    compile group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: log4j2version
+
+    compile 'com.amazonaws:amazon-kinesis-client:1.9.1'
+    compile 'com.amazonaws:aws-java-sdk:1.11.397'
+    
+    compile group: 'org.yaml', name: 'snakeyaml', version: '1.19'
+    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.8.3'
+
+    //compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.9.6'
+    //compile group: 'joda-time', name: 'joda-time', version: '2.10'
+    //compile 'com.google.guava:guava:23.0'
+    testCompile 'junit:junit:4.12'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
