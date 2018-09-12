@@ -41,6 +41,7 @@ import java.util.List;
 public class KhoseRecordProcessor implements IRecordProcessor {
 
     private static final Log LOG = LogFactory.getLog(KhoseRecordProcessor.class);
+    private final long checkpointIntervalMillis;
 
     private String kinesisShardId;
 
@@ -48,8 +49,7 @@ public class KhoseRecordProcessor implements IRecordProcessor {
     private static final long BACKOFF_TIME_IN_MILLIS = 3000L;
     private static final int NUM_RETRIES = 10;
 
-    // Checkpoint about once a minute
-    private static final long CHECKPOINT_INTERVAL_MILLIS = 60000L;
+    public static final long DEFAULT_CHECKPOINT_INTERVAL_MILLIS = 60000L;
     private long nextCheckpointTimeInMillis;
 
     private final CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
@@ -58,7 +58,12 @@ public class KhoseRecordProcessor implements IRecordProcessor {
     private final Sink sink;
 
     public KhoseRecordProcessor(final Sink sink) {
+        this(sink, DEFAULT_CHECKPOINT_INTERVAL_MILLIS);
+    }
+
+    public KhoseRecordProcessor(final Sink sink, final long checkpointIntervalMillis) {
         this.sink = sink;
+        this.checkpointIntervalMillis = checkpointIntervalMillis;
     }
 
     /**
@@ -83,7 +88,7 @@ public class KhoseRecordProcessor implements IRecordProcessor {
         // Checkpoint once every checkpoint interval.
         if (System.currentTimeMillis() > nextCheckpointTimeInMillis) {
             checkpoint(checkpointer);
-            nextCheckpointTimeInMillis = System.currentTimeMillis() + CHECKPOINT_INTERVAL_MILLIS;
+            nextCheckpointTimeInMillis = System.currentTimeMillis() + checkpointIntervalMillis;
         }
     }
 
@@ -131,9 +136,7 @@ public class KhoseRecordProcessor implements IRecordProcessor {
         try {
             JsonNode rootNode = objectMapper.readTree(record.getData().array());
 
-            // TODO this log needs to be debug
-            LOG.info(record.getSequenceNumber() + ", " + record.getPartitionKey() +
-                    ", source: " + rootNode.get("source"));
+            LOG.debug("Processing record " + record.getSequenceNumber() + ", partition key: " + record.getPartitionKey());
 
             sink.write(rootNode);
         } catch (CharacterCodingException | JsonProcessingException e) {
